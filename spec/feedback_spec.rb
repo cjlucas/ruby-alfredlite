@@ -3,18 +3,17 @@ require File.expand_path('../spec_helper.rb', __FILE__)
 describe Alfred::Feedback::Item do
   it 'adds attributes and child nodes properly' do
     item = Alfred::Feedback::Item.new.tap do |item|
-      item.title = 'this is the title'
-      item.subtitle = 'this is the subtitle'
-      item.arg = 'this is the arg'
-      item.valid = false
-      item.uid = 'alfredlite-43223'
+      item.title        = 'this is the title'
+      item.subtitle     = 'this is the subtitle'
+      item.arg          = 'this is the arg'
+      item.valid        = false
+      item.uid          = 'alfredlite-43223'
       item.autocomplete = 'autocompleter'
-      item.icon = '/path/to/icon.png'
-      item.icon_type = 'fileicon'
+      item.icon         = '/path/to/icon.png'
+      item.icon_type    = 'fileicon'
     end
 
     xml = item.to_xml
-    puts xml
 
     # check attributes
     Alfred::Feedback::Item::ATTRIBUTES.each do |attrib|
