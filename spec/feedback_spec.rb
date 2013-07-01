@@ -1,8 +1,10 @@
 require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe Alfred::Feedback::Item do
+Item = Alfred::Feedback::Item
+
+describe Item do
   it 'adds attributes and child nodes properly' do
-    item = Alfred::Feedback::Item.new.tap do |item|
+    item = Item.new.tap do |item|
       item.title        = 'this is the title'
       item.subtitle     = 'this is the subtitle'
       item.arg          = 'this is the arg'
@@ -16,12 +18,13 @@ describe Alfred::Feedback::Item do
     xml = item.to_xml
 
     # check attributes
-    Alfred::Feedback::Item::ATTRIBUTES.each do |attrib|
-      xml[attrib].should eq(item.method(attrib).call)
+    Item::ATTRIBUTES.each do |attrib|
+      xml_attrib = Item::ATTRIBUTES_XML_MAP.fetch(attrib, attrib)
+      xml[xml_attrib].should eq(item.method(attrib).call)
     end
 
     # child nodes
-    Alfred::Feedback::Item::CHILD_NODES.keys do |node_name|
+    Item::CHILD_NODES.keys do |node_name|
       nodes = xml.children.select {|child| child.name.eql?(node_name)}
       nodes.count.should eq(1)
       nodes.first.name.should eq(node_name)
@@ -29,6 +32,6 @@ describe Alfred::Feedback::Item do
   end
 
   #it "Doesn't add attributes and nodes that are nil" do
-    #item = Alfred::Feedback::Item.new
+    #item = Item.new
   #end
 end

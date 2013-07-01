@@ -22,7 +22,13 @@ module Alfred
   module Feedback
     class Item
       include LibXML
-      ATTRIBUTES  = [:uid, :arg, :valid, :autocomplete, :type]
+      # Compatibility Note:
+      #   In Ruby 1.8, Object#type is defined, to workaround this the type 
+      #   attribute can be accessed via #item_type
+      ATTRIBUTES  = [:uid, :arg, :valid, :autocomplete, :item_type]
+      ATTRIBUTES_XML_MAP = {
+        :item_type => :type,
+      }
       CHILD_NODES = {
         :title => [], 
         :subtitle  => [], 
@@ -30,7 +36,7 @@ module Alfred
       }
 
       def initialize
-        @type = 'file'
+        @item_type = 'file'
       end
 
       def valid=(valid)
@@ -41,7 +47,8 @@ module Alfred
         item_node = XML::Node.new('item')
         ATTRIBUTES.each do |attrib|
           value = method(attrib).call
-          item_node[attrib.to_s] = value unless value.nil?
+          xml_attrib = ATTRIBUTES_XML_MAP.fetch(attrib, attrib)
+          item_node[xml_attrib.to_s] = value unless value.nil?
         end
 
         CHILD_NODES.each do |node_name, node_attribs|
@@ -64,6 +71,14 @@ module Alfred
 
       # generate getters and setters
       
+      def self.instance_method_exists?(method)
+        # In Ruby 1.8, Object.instance_methods returns and array of strings
+        # In Ruby 1.9+, it returns an array of symbols
+        method = RUBY_VERSION < '1.9' ? method.to_s : method.to_sym
+
+        instance_methods.include?(method)
+      end
+      
       def self.child_attribute_name(child_node, attribute)
         "#{child_node}_#{attribute}"
       end
@@ -72,8 +87,9 @@ module Alfred
         getter = attr.to_sym
         ivar = "@#{attr}" if ivar.nil?
         
-        unless instance_methods.include?(getter)
-          define_method(getter) { instance_variable_get(ivar) }
+        unless instance_method_exists?(getter)
+          attr_reader attr
+          #define_method(getter) { instance_variable_get(ivar) }
         end
       end
       
@@ -81,10 +97,11 @@ module Alfred
         setter = "#{attr}=".to_sym
         ivar = "@#{attr}" if ivar.nil?
         
-        unless instance_methods.include?(setter)
-          define_method(setter) do |value|
-            instance_variable_set(ivar, value)
-          end
+        unless instance_method_exists?(setter)
+          attr_writer attr
+          #define_method(setter) do |value|
+            #instance_variable_set(ivar, value)
+          #end
         end
       end
 
