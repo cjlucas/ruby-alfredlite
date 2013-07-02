@@ -18,7 +18,7 @@ end
 
 
 task :build do
-  system 'gem build easytag.gemspec'
+  system 'gem build alfredlite.gemspec'
 end
 
 task :release => :build do
