@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/cjlucas/ruby-alfredlite.png?branch=master)](https://travis-ci.org/cjlucas/ruby-alfredlite)
 [![Build Status](https://travis-ci.org/cjlucas/ruby-alfredlite.png?branch=develop)](https://travis-ci.org/cjlucas/ruby-alfredlite)
+[![Gem Version](https://badge.fury.io/rb/alfredlite.png)](http://badge.fury.io/rb/alfredlite)
 
 AlfredLite is a lightweight modular framework for creating 
 [Alfred](http://www.alfredapp.com/) workflows.
