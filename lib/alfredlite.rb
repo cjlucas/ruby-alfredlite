@@ -1,3 +1,3 @@
 require 'rubygems'
 
-require 'alfredlite/alfredlite'
+require 'alfredlite/workflow'

@@ -22,6 +22,9 @@ module Alfred
       @volatile_storage_path
     end
 
+    def query(input)
+    end
+
     private
     
     def self.mkdir(path)
