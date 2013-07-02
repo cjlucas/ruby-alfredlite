@@ -14,18 +14,17 @@ describe Item do
       item.icon         = '/path/to/icon.png'
       item.icon_type    = 'fileicon'
     end
-
     xml = item.to_xml
-
+    puts xml 
     # check attributes
     Item::ATTRIBUTES.each do |attrib|
       xml_attrib = Item::ATTRIBUTES_XML_MAP.fetch(attrib, attrib)
-      xml[xml_attrib].should eq(item.method(attrib).call)
+      xml.attributes[xml_attrib.to_s].should eq(item.method(attrib).call)
     end
 
     # child nodes
     Item::CHILD_NODES.keys do |node_name|
-      nodes = xml.children.select {|child| child.name.eql?(node_name)}
+      nodes = xml.children.select {|child| child.name.eql?(node_name.to_s)}
       nodes.count.should eq(1)
       nodes.first.name.should eq(node_name)
     end

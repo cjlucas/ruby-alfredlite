@@ -1,16 +1,14 @@
-require 'libxml'
+require 'rexml/document'
 
 module Alfred
   class Workflow
-    include LibXML
-
     def feedback_items
       @feedback_items ||= []
     end
 
     def feedback_xml
-      doc = XML::Document.new
-      doc.root = XML::Node.new('items')
+      doc = REXML::Document.new
+      doc << REXML::Element.new('items')
       feedback_items.each { |item| doc.root << item.to_xml }
 
       doc
@@ -21,7 +19,6 @@ end
 module Alfred
   module Feedback
     class Item
-      include LibXML
       # Compatibility Note:
       #   In Ruby 1.8, Object#type is defined, to workaround this the type 
       #   attribute can be accessed via #item_type
@@ -44,21 +41,24 @@ module Alfred
       end
 
       def to_xml
-        item_node = XML::Node.new('item')
+        item_node = REXML::Element.new('item')
         ATTRIBUTES.each do |attrib|
           value = method(attrib).call
           xml_attrib = ATTRIBUTES_XML_MAP.fetch(attrib, attrib)
-          item_node[xml_attrib.to_s] = value unless value.nil?
+          #item_node[xml_attrib.to_s] = value unless value.nil?
+          item_node.add_attribute(xml_attrib.to_s, value) unless value.nil?
         end
 
         CHILD_NODES.each do |node_name, node_attribs|
           value = method(node_name).call
           unless value.nil?
-            item_node << XML::Node.new(node_name, value).tap do |child|
+            item_node << REXML::Element.new(node_name.to_s).tap do |child|
+              child.text = value
+
               node_attribs.each do |attrib|
                 attr = self.class.child_attribute_name(node_name, attrib)
                 value = method(attr).call
-                child[attr] = value unless value.nil?
+                child.add_attribute(attr, value) unless value.nil?
               end
             end
           end
