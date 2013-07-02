@@ -15,7 +15,7 @@ describe Item do
       item.icon_type    = 'fileicon'
     end
     xml = item.to_xml
-    puts xml 
+    
     # check attributes
     Item::ATTRIBUTES.each do |attrib|
       xml_attrib = Item::ATTRIBUTES_XML_MAP.fetch(attrib, attrib)
