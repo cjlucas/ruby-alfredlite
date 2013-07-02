@@ -83,26 +83,14 @@ module Alfred
         "#{child_node}_#{attribute}"
       end
 
-      def self.getter_unless_exists(attr, ivar = nil)
+      def self.getter_unless_exists(attr)
         getter = attr.to_sym
-        ivar = "@#{attr}" if ivar.nil?
-        
-        unless instance_method_exists?(getter)
-          attr_reader attr
-          #define_method(getter) { instance_variable_get(ivar) }
-        end
+        attr_reader attr unless instance_method_exists?(getter)
       end
       
-      def self.setter_unless_exists(attr, ivar = nil)
+      def self.setter_unless_exists(attr)
         setter = "#{attr}=".to_sym
-        ivar = "@#{attr}" if ivar.nil?
-        
-        unless instance_method_exists?(setter)
-          attr_writer attr
-          #define_method(setter) do |value|
-            #instance_variable_set(ivar, value)
-          #end
-        end
+        attr_writer attr unless instance_method_exists?(setter)
       end
 
       ATTRIBUTES.each do |attrib|
@@ -115,9 +103,10 @@ module Alfred
         setter_unless_exists(name)
         
         attribs.each do |attrib|
-          attr = child_attribute_name(name, attrib)
-          getter_unless_exists(attr)
-          setter_unless_exists(attr)
+          child_attribute_name(name, attrib).tap do |attr|
+            getter_unless_exists(attr)
+            setter_unless_exists(attr)
+          end
         end
       end
 
