@@ -18,7 +18,7 @@ describe Item do
     
     # check attributes
     Item::ATTRIBUTES.each do |attrib|
-      xml_attrib = Item::ATTRIBUTES_XML_MAP.fetch(attrib, attrib)
+      xml_attrib = Item::XML_ATTRIBUTES_MAP.fetch(attrib, attrib)
       xml.attributes[xml_attrib.to_s].should eq(item.method(attrib).call)
     end
 
@@ -30,7 +30,28 @@ describe Item do
     end
   end
 
+
+
   #it "Doesn't add attributes and nodes that are nil" do
     #item = Item.new
   #end
+end
+
+describe Alfred::Feedback::ItemArray do
+  it 'prioritizes items properly' do
+    workflow = Alfred::Workflow.new(nil)
+    [['second item', 5],
+     ['third item', 0],
+     ['first item', 10]].each do |item_info|
+       workflow.feedback_items << Item.new.tap do |item|
+         item.title = item_info[0]
+         item.priority = item_info[1]
+       end
+     end
+    
+    workflow.feedback_items.prioritize!
+    workflow.feedback_items[0].title.should eq('first item')
+    workflow.feedback_items[1].title.should eq('second item')
+    workflow.feedback_items[2].title.should eq('third item')
+  end
 end

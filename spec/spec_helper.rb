@@ -1,9 +1,6 @@
 require 'rubygems'
 require 'bundler'
-Bundler.setup(:default, :test)
-
-require 'rspec'
-require 'coveralls'
+Bundler.require(:default, :test)
 
 require 'alfredlite'
 require 'alfredlite/feedback'
