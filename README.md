@@ -57,9 +57,9 @@ ExampleWorkflow.new.query("{query}")
 
 ## Requirements ##
 AlfredLite is tested against the following verions of Ruby:
-  - 1.8.7 (preinstalled on OS X Mountain Lion)
   - 1.9.3
   - 2.0.0 (preinstalled on OS X Mavericks)
+  - 2.1
 
 ### Module-level dependencies ###
 - Workflow module
