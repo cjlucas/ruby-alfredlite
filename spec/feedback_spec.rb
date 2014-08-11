@@ -1,57 +1,30 @@
-require File.expand_path('../spec_helper.rb', __FILE__)
+require_relative 'spec_helper'
 
-Item = Alfred::Feedback::Item
-
-describe Item do
-  it 'adds attributes and child nodes properly' do
-    item = Item.new.tap do |item|
-      item.title        = 'this is the title'
-      item.subtitle     = 'this is the subtitle'
-      item.arg          = 'this is the arg'
-      item.valid        = false
-      item.uid          = 'alfredlite-43223'
-      item.autocomplete = 'autocompleter'
-      item.icon         = '/path/to/icon.png'
-      item.icon_type    = 'fileicon'
-    end
-    xml = item.to_xml
-    
-    # check attributes
-    Item::ATTRIBUTES.each do |attrib|
-      xml_attrib = Item::XML_ATTRIBUTES_MAP.fetch(attrib, attrib)
-      xml.attributes[xml_attrib.to_s].should eq(item.method(attrib).call)
-    end
-
-    # child nodes
-    Item::CHILD_NODES.keys do |node_name|
-      nodes = xml.children.select {|child| child.name.eql?(node_name.to_s)}
-      nodes.count.should eq(1)
-      nodes.first.name.should eq(node_name)
+describe Alfred::Feedback::Item do
+  context 'when no item attributes are added' do
+    it 'should generate correct XML' do
+      element = described_class.new.to_xml
+      expect(element.has_attributes?).to be(false)
+      expect(element.has_elements?).to be(false)
     end
   end
 
+  context 'when all item attributes added, but no subelements' do
+    it 'should generate correct XML' do
+      element = described_class.new.tap do |item|
+        item.uid = 'uid here'
+        item.arg = 'arg here'
+        item.autocomplete = 'autocomplete here'
+        item.type = 'type here'
+        item.valid = true
+      end.to_xml
 
-
-  #it "Doesn't add attributes and nodes that are nil" do
-    #item = Item.new
-  #end
-end
-
-describe Alfred::Feedback::ItemArray do
-  it 'prioritizes items properly' do
-    workflow = Alfred::Workflow.new(nil)
-    [['second item', 5],
-     ['third item', 0],
-     ['first item', 10]].each do |item_info|
-       workflow.feedback_items << Item.new.tap do |item|
-         item.title = item_info[0]
-         item.priority = item_info[1]
-       end
-     end
-    
-    workflow.feedback_items.prioritize!
-    workflow.feedback_items[0].title.should eq('first item')
-    workflow.feedback_items[1].title.should eq('second item')
-    workflow.feedback_items[2].title.should eq('third item')
+      expect(element.name).to eql('item')
+      expect(element.attribute('uid').value).to eql('uid here')
+      expect(element.attribute('arg').value).to eql('arg here')
+      expect(element.attribute('autocomplete').value).to eql('autocomplete here')
+      expect(element.attribute('type').value).to eql('type here')
+      expect(element.attribute('valid').value).to eql('yes')
+    end
   end
 end

@@ -3,86 +3,82 @@ require 'rexml/document'
 module Alfred
   class Workflow
     def feedback_items
-      @feedback_items ||= Feedback::ItemArray.new
+      @feedback_items ||= []
     end
 
     def feedback_xml
       doc = REXML::Document.new
       doc << REXML::Element.new('items')
-      feedback_items.each { |item| doc.root << item.to_xml }
+      feedback_items
+      .sort { |a,b| b.priority <=> a.priority}
+      .each { |item| doc.root << item.to_xml }
 
       doc
+    end
+
+    def write_feedback!
+      puts feedback_xml.to_s
     end
   end
 end
 
 module Alfred
   module Feedback
-    class ItemArray < Array
-      def prioritize!
-        sort! { |a,b| a.priority <=> b.priority }.reverse!
-      end
-      
-      def prioritize
-        dup.prioritize!
-      end
-    end
-
     class Item
-      # Compatibility Note:
-      #   In Ruby 1.8, Object#type is defined, to workaround this the type 
-      #   attribute can be accessed via #item_type
-      ATTRIBUTES  = [:uid, :arg, :valid, :autocomplete, :item_type]
-      XML_ATTRIBUTES_MAP = {
-        :item_type => :type,
-      }
-      CHILD_NODES = {
-        :title => [], 
-        :subtitle  => [], 
-        :icon => [:type],
-      }
-
-      (ATTRIBUTES + CHILD_NODES.keys).each { |attr| attr_accessor attr }
-      CHILD_NODES.each do |k,v|
-        v.each { |attr| attr_accessor "#{k}_#{attr}" }
-      end
+      ITEM_ATTRIBUTES = [:uid, :arg, :autocomplete, :type, :valid]
+      ITEM_ATTRIBUTES.each { |attribute| attr_accessor attribute }
 
       attr_accessor :priority
 
       def initialize
-        @item_type = 'file'
+        @subelements = []
         @priority = 0
       end
 
       def valid=(valid)
-        @valid = valid ? 'yes' : 'no'
+        @valid = valid ? :yes : :no
+      end
+
+      def add_title(title, **args)
+        add_subelement('title', title, **args)
+      end
+
+      def add_subtitle(subtitle, **args)
+        add_subelement('subtitle', subtitle, **args)
+      end
+
+      def add_icon(icon, **args)
+        add_subelement('icon', icon, **args)
+      end
+
+      def add_text(text, **args)
+        add_subelement('text', text, **args)
       end
 
       def to_xml
-        item_node = REXML::Element.new('item')
-        ATTRIBUTES.each do |attrib|
-          value = method(attrib).call
-          xml_attrib = XML_ATTRIBUTES_MAP.fetch(attrib, attrib)
-          #item_node[xml_attrib.to_s] = value unless value.nil?
-          item_node.add_attribute(xml_attrib.to_s, value) unless value.nil?
+        item = REXML::Element.new('item')
+        ITEM_ATTRIBUTES.each do |attr|
+          item.add_attribute(attr.to_s, send(attr).to_s) unless send(attr).nil?
         end
 
-        CHILD_NODES.each do |node_name, node_attribs|
-          value = method(node_name).call
-          unless value.nil?
-            item_node << REXML::Element.new(node_name.to_s).tap do |child|
-              child.text = value
-
-              node_attribs.each do |attrib|
-                attr = "#{node_name}_#{attrib}"
-                value = method(attr).call
-                child.add_attribute(attr, value) unless value.nil?
-              end
-            end
-          end
+        @subelements.each do |hash|
+          element = REXML::Element.new(hash[:name])
+          element.add_attributes(hash[:attributes])
+          element.text = hash[:text]
+          item.add_element(element)
         end
 
-        item_node
+        item
+      end
+
+      private
+
+      def add_subelement(element_name, text, **args)
+        # REXML requires attributes be String objects
+        args_s = {}
+        args.each_pair { |k,v| args_s[k.to_s] = v.to_s }
+
+        @subelements << {name: element_name, attributes: args_s, text: text.to_s}
       end
     end
   end
