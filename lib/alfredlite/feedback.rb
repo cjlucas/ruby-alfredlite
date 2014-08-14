@@ -16,7 +16,7 @@ module Alfred
       doc
     end
 
-    def write_feedback!
+    def send_feedback!
       puts feedback_xml.to_s
     end
   end
