@@ -10,14 +10,12 @@ AlfredLite is a lightweight modular framework for creating
    - Only load the modules your workflow uses
    - Faster load times (execution speed is an underappreciated feature of any workflow)
    - Less bundeled dependencies
- - Subclassable workflows
-   - `Alfred::Workflow` is designed to be subclassed, the possibilities are endless!
 
 ## Synopsis ##
 Here's a trivial example of a workflow that utilizes Alfred's feedback system:
 ```ruby
 require 'alfredlite' # this loads the workflow module
-require 'alfredlite/feedback' # all submodules have to be loaded explicitly
+require 'alfredlite/feedback' # all submodules must be loaded explicitly
 
 class ExampleWorkflow < Alfred::Workflow
   BUNDLE_ID = 'net.cjlucas.alfred.example'
@@ -35,14 +33,16 @@ class ExampleWorkflow < Alfred::Workflow
       # Alfred::Workflow#feedback_items and Alfred::Feedback::Item
       # become available when the feedback module is loaded
       feedback_items << Alfred::Feedback::Item.new.tap do |item|
-        item.title = data.info
-        item.subtitle = data.more_info
-        item.icon = '/path/to/icon.png'
+        item.valid = true
+        item.arg = data.arg
+        item.add_title(data.info)
+        item.add_subtitle(data.more_info, mod: fn)
+        item.add_icon('/path/to/icon.png', type: 'filetype')
       end
     end
 
     # send our feedback_items to Alfred to be processed and displayed
-    puts feedback_items.to_xml
+    send_feedback!
   end
 end
 ```
@@ -57,9 +57,8 @@ ExampleWorkflow.new.query("{query}")
 
 ## Requirements ##
 AlfredLite is tested against the following verions of Ruby:
-  - 1.8.7 (preinstalled on OS X Mountain Lion)
-  - 1.9.3
   - 2.0.0 (preinstalled on OS X Mavericks)
+  - 2.1
 
 ### Module-level dependencies ###
 - Workflow module

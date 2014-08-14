@@ -1,36 +1,47 @@
-require File.expand_path('../spec_helper.rb', __FILE__)
+require_relative 'spec_helper'
 
-Item = Alfred::Feedback::Item
+describe Alfred::Feedback::Item do
+  before(:each) do
+    @item = described_class.new
+  end
 
-describe Item do
-  it 'adds attributes and child nodes properly' do
-    item = Item.new.tap do |item|
-      item.title        = 'this is the title'
-      item.subtitle     = 'this is the subtitle'
-      item.arg          = 'this is the arg'
-      item.valid        = false
-      item.uid          = 'alfredlite-43223'
-      item.autocomplete = 'autocompleter'
-      item.icon         = '/path/to/icon.png'
-      item.icon_type    = 'fileicon'
-    end
-    xml = item.to_xml
-    
-    # check attributes
-    Item::ATTRIBUTES.each do |attrib|
-      xml_attrib = Item::ATTRIBUTES_XML_MAP.fetch(attrib, attrib)
-      xml.attributes[xml_attrib.to_s].should eq(item.method(attrib).call)
-    end
-
-    # child nodes
-    Item::CHILD_NODES.keys do |node_name|
-      nodes = xml.children.select {|child| child.name.eql?(node_name.to_s)}
-      nodes.count.should eq(1)
-      nodes.first.name.should eq(node_name)
+  context 'when no attributes are added' do
+    it 'should generate correct XML' do
+      xml = @item.to_xml
+      expect(xml.has_attributes?).to be(false)
+      expect(xml.has_elements?).to be(false)
     end
   end
 
-  #it "Doesn't add attributes and nodes that are nil" do
-    #item = Item.new
-  #end
+  context 'when all item attributes added, but no subelements' do
+    it 'should generate correct XML' do
+      xml = @item.tap do |item|
+        item.uid = 'uid here'
+        item.arg = 'arg here'
+        item.autocomplete = 'autocomplete here'
+        item.type = 'type here'
+        item.valid = true
+      end.to_xml
+
+      expect(xml.name).to eql('item')
+      expect(xml.attribute('uid').value).to eql('uid here')
+      expect(xml.attribute('arg').value).to eql('arg here')
+      expect(xml.attribute('autocomplete').value).to eql('autocomplete here')
+      expect(xml.attribute('type').value).to eql('type here')
+      expect(xml.attribute('valid').value).to eql('yes')
+    end
+  end
+
+  context 'when adding multiple subtitles' do
+    it 'should generate correct XML' do
+      @item.add_subtitle('Subtitle 1')
+      @item.add_subtitle('Subtitle 2', mod: :fn)
+
+      xml = @item.to_xml
+      expect(xml.children.size).to eq(2)
+      expect(xml.children[0].text).to eql('Subtitle 1')
+      expect(xml.children[1].text).to eql('Subtitle 2')
+      expect(xml.children[1].attribute('mod').value).to eql('fn')
+    end
+  end
 end
